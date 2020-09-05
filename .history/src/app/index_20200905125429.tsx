@@ -19,10 +19,10 @@ export function App() {
   return (
     <BrowserRouter>
       <Helmet
-        titleTemplate="%s - Countdown Timer"
+        titleTemplate="%s - React Boilerplate"
         defaultTitle="Countdown Timer"
       >
-        <meta name="description" content="A Countdown Timer application" />
+        <meta name="description" content="A React Boilerplate application" />
       </Helmet>
 
       <Switch>
