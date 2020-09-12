@@ -1,14 +1,43 @@
-import React, { useEffect, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import styled from 'styled-components';
-import { SpeedControl } from '../SpeedControl';
-import { Countdown } from '../Countdown';
+/**
+ *
+ * Countdown
+ *
+ */
 
-export function HomePage() {
-  const [count, setCount] = React.useState<number | undefined>(0);
-  const [initial, setInitial] = React.useState(0);
-  const [paused, setPaused] = React.useState(true);
-  const [ms, setMs] = React.useState(1000);
+import React, { useEffect, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import styled from 'styled-components/macro';
+
+import { useInjectReducer } from 'utils/redux-injectors';
+import { reducer, sliceKey, actions } from './slice';
+import { selectCountdown } from './selectors';
+import { selectSpeedControl } from '../SpeedControl/selectors';
+import { Button } from 'app/components/Button';
+
+interface Props {}
+
+export function Countdown(props: Props) {
+  useInjectReducer({ key: sliceKey, reducer: reducer });
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const countdown = useSelector(selectCountdown);
+  const speedControl = useSelector(selectSpeedControl);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const dispatch = useDispatch();
+
+  const { count, initial, paused } = countdown;
+  const setCount = useCallback(
+    e => {
+      return dispatch(actions.setCount(e));
+    },
+    [dispatch],
+  );
+  const setInitial = (e: number) => dispatch(actions.setInitial(e));
+  const setPaused = useCallback(e => dispatch(actions.setPaused(e)), [
+    dispatch,
+  ]);
+  const { ms } = speedControl;
+
   const [color, setColor] = React.useState(false);
   const [blink, setBlink] = React.useState(false);
   const counter = React.useRef<number>();
@@ -17,16 +46,12 @@ export function HomePage() {
   const timer = useCallback(() => {
     if (count) {
       if (!paused) {
-        setCount(prev => {
-          if (prev) {
-            const result = prev - 1;
-            return result <= 0 ? 0 : result;
-          }
-        });
+        const result = count - 1;
+        setCount(result <= 0 ? 0 : result);
         counter.current = setTimeout(timer, ms);
       }
     }
-  }, [count, ms, paused]);
+  }, [count, ms, paused, setCount]);
 
   useEffect(() => {
     if (blink) change.current = setInterval(() => setColor(prev => !prev), 300);
@@ -58,7 +83,7 @@ export function HomePage() {
     return () => {
       clearTimeout(counter.current);
     };
-  }, [ms, paused, count, timer]);
+  }, [ms, paused, count, timer, setPaused]);
 
   const startTimer = () => {
     setPaused(false);
@@ -73,20 +98,12 @@ export function HomePage() {
   const minute = quotient(count, oneminute),
     second = remainder(count, oneminute);
 
-  const speedControlMenu = [1, 1.5, 2, 100];
   const minuteText = quotient(minute, 10) >= 1 ? minute : '0' + minute;
   const secondText = quotient(second, 10) >= 1 ? second : '0' + second;
+
   return (
     <>
-      <Helmet>
-        <title>{count && count.toString()}</title>
-        <meta name="description" content="Countdown timer with react" />
-      </Helmet>
-      <Container>
-        <Countdown />
-        <SpeedControl />
-      </Container>
-      <Container>
+      <Div>
         <div>
           Countdown:{' '}
           <Input
@@ -95,7 +112,9 @@ export function HomePage() {
             min={1}
             onChange={e => setInitial(parseInt(e.target.value) * oneminute)}
           />
-          <BtnStart onClick={() => startTimer()}>Start</BtnStart>
+          <Button primary onClick={() => startTimer()}>
+            Start
+          </Button>
         </div>
 
         <Comment>
@@ -124,22 +143,12 @@ export function HomePage() {
             {paused ? <Play /> : <Pause />}
           </BtnPlayPause>
         </TimerCounter>
-
-        <div>
-          {speedControlMenu.map((e, i) => (
-            <BtnSpeedControl
-              key={i}
-              onClick={() => setMs(1000 / e)}
-              active={ms === 1000 / e}
-            >
-              {e}X
-            </BtnSpeedControl>
-          ))}
-        </div>
-      </Container>
+      </Div>
     </>
   );
 }
+
+const Div = styled.div``;
 
 const Play = () => {
   return (
@@ -158,15 +167,6 @@ const Pause = () => {
   );
 };
 
-const Container = styled.div`
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-`;
-
 const Comment = styled.div`
   height: 20px;
 `;
@@ -176,19 +176,6 @@ const Input = styled.input`
   height: 39px;
   margin: 4px;
   max-width: 120px;
-`;
-
-const BtnStart = styled.button`
-  margin: 4px;
-  background-color: #6ab6a9;
-  border: 0;
-  text-transform: uppercase;
-  cursor: pointer;
-  color: white;
-  padding: 12px 16px;
-  &:hover {
-    opacity: 0.8;
-  }
 `;
 
 const TimerCounter = styled.div`
@@ -207,32 +194,14 @@ const BtnPlayPause = styled.button`
   right: 0;
   width: 60px;
   height: 60px;
-  cursor: pointer;
   border-radius: 50%;
   border: 2px solid black;
+  cursor: pointer;
   color: black;
   background: white;
   &:hover {
+    opacity: 0.8;
     background: black;
     color: white;
-    opacity: 0.8;
-  }
-`;
-
-const BtnSpeedControl = styled.button<{ active: Boolean }>`
-  background-color: ${p => (p.active ? '#6e6966' : 'white')};
-  cursor: pointer;
-  border: 0;
-  text-transform: uppercase;
-  color: ${p => (p.active ? 'white' : 'black')};
-  padding: 12px 16px;
-  margin: 4px;
-  width: 75px;
-
-  border: 2px solid black;
-  &:hover {
-    background-color: #6e6966;
-    color: white;
-    opacity: 0.8;
   }
 `;

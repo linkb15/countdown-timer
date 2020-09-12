@@ -7,6 +7,10 @@ export const GlobalStyle = createGlobalStyle`
     width: 100%;
   }
 
+  * {
+    outline: none;
+  }
+
   body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }

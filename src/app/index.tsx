@@ -19,7 +19,7 @@ export function App() {
   return (
     <BrowserRouter>
       <Helmet
-        titleTemplate="%s - Countdown Timer"
+        titleTemplate="%s | Countdown Timer"
         defaultTitle="Countdown Timer"
       >
         <meta name="description" content="A Countdown Timer application" />
