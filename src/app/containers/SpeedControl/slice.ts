@@ -4,7 +4,7 @@ import { ContainerState } from './types';
 
 // The initial state of the SpeedControl container
 export const initialState: ContainerState = {
-  speedMenu: [1, 1.5, 2, 100],
+  speedMenu: [1, 1.5, 2],
   ms: 1000,
 };
 
